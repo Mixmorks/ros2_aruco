@@ -43,6 +43,38 @@ from ros2_aruco_interfaces.msg import ArucoMarkers
 
 class ArucoNode(rclpy.node.Node):
 
+    def dict_enum_to_id(self, dict_enum):
+        if dict_enum == "DICT_4X4_50":
+            return cv2.aruco.DICT_4X4_50
+        if dict_enum == "DICT_4X4_100":
+            return cv2.aruco.DICT_4X4_100
+        if dict_enum == "DICT_4X4_1000":
+            return cv2.aruco.DICT_4X4_1000
+        if dict_enum == "DICT_5X5_50":
+            return cv2.aruco.DICT_5X5_50
+        if dict_enum == "DICT_5X5_100":
+            return cv2.aruco.DICT_5X5_100
+        if dict_enum == "DICT_5X5_250":
+            return cv2.aruco.DICT_5X5_250
+        if dict_enum == "DICT_5X5_1000":
+            return cv2.aruco.DICT_5X5_1000
+        if dict_enum == "DICT_6X6_50":
+            return cv2.aruco.DICT_6X6_50
+        if dict_enum == "DICT_6X6_100":
+            return cv2.aruco.DICT_6X6_100
+        if dict_enum == "DICT_6X6_250":
+            return cv2.aruco.DICT_6X6_250
+        if dict_enum == "DICT_6X6_1000":
+            return cv2.aruco.DICT_6X6_1000
+        if dict_enum == "DICT_7X7_50":
+            return cv2.aruco.DICT_7X7_50
+        if dict_enum == "DICT_7X7_100":
+            return cv2.aruco.DICT_7X7_100
+        if dict_enum == "DICT_7X7_250":
+            return cv2.aruco.DICT_7X7_250
+        if dict_enum == "DICT_7X7_1000":
+            return cv2.aruco.DICT_7X7_1000
+
     def __init__(self):
         super().__init__('aruco_node')
 
@@ -51,18 +83,18 @@ class ArucoNode(rclpy.node.Node):
         self.declare_parameter("aruco_dictionary_id", "DICT_5X5_250")
         self.declare_parameter("image_topic", "/camera/image_raw")
         self.declare_parameter("camera_info_topic", "/camera/camera_info")
-        self.declare_parameter("camera_frame", None)
+        self.declare_parameter("camera_frame", "world")
 
         self.marker_size = self.get_parameter("marker_size").get_parameter_value().double_value
-        dictionary_id_name = self.get_parameter(
-            "aruco_dictionary_id").get_parameter_value().string_value
+        dictionary_id_name = self.get_parameter("aruco_dictionary_id").get_parameter_value().string_value
         image_topic = self.get_parameter("image_topic").get_parameter_value().string_value
         info_topic = self.get_parameter("camera_info_topic").get_parameter_value().string_value
         self.camera_frame = self.get_parameter("camera_frame").get_parameter_value().string_value
 
         # Make sure we have a valid dictionary id:
         try:
-            dictionary_id = cv2.aruco.__getattribute__(dictionary_id_name)
+            dictionary_id = self.dict_enum_to_id(dictionary_id_name)
+            #dictionary_id = cv2.aruco.__getattribute__(dictionary_id_name)
             if type(dictionary_id) != type(cv2.aruco.DICT_5X5_100):
                 raise AttributeError
         except AttributeError:
@@ -88,8 +120,9 @@ class ArucoNode(rclpy.node.Node):
         self.intrinsic_mat = None
         self.distortion = None
 
-        self.aruco_dictionary = cv2.aruco.Dictionary_get(dictionary_id)
-        self.aruco_parameters = cv2.aruco.DetectorParameters_create()
+        self.aruco_dictionary = cv2.aruco.getPredefinedDictionary(dictionary_id)
+        #self.aruco_dictionary = cv2.aruco.Dictionary_get(dictionary_id)
+        self.aruco_parameters = cv2.aruco.DetectorParameters()
         self.bridge = CvBridge()
 
     def info_callback(self, info_msg):
